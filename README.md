@@ -9,6 +9,22 @@ Specifications are passed as a list of atoms and/or key/value tuples to the vali
 
 ```erlang
 
+required				%% Indicates that the value must be present. Fails if the value is matches the atom 'undefined'
+boolean					%% Value must be a boolean or a string that can be converted cleanly to a boolean
+integer					%% Value must be an integer
+numeric					%% Value must be an integer or floating-point value
+{ length, Len }			%% String value must be Len characters long
+{ length, Min, Max }	%% String value must be between Min and Max characters long
+{ bounded, Min, Max }	%% Numeric value must be greater than or equal to Min and less than or equal to Max
+{ min, Min }			%% Numeric value must be greater than or equal to Min
+{ max, Max }			%% Numeric value must be less than or equal to Max
+
+```
+
+## Examples
+
+```erlang
+
 %% Test for non-undefined variable
 { error, _, _ }		= validator:validator( undefined, 	[ required ] ),
 
