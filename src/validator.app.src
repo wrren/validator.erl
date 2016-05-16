@@ -1,0 +1,16 @@
+{ application, validator,
+[
+    { description, "Input Validation Library" },
+    { vsn, "1" },
+    { modules, 
+    [
+        validator
+    ]},
+    { registered, [] },
+    { applications, 
+    [
+        kernel,
+        stdlib
+    ]},
+    { env, [] }
+ ]}.
