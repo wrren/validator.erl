@@ -3,6 +3,14 @@
 Simple input validation module for erlang applications. Allows variables to be tested
 against a list of validation specifications.
 
+## Rebar Installation
+
+Add the following to your rebar.config:
+
+```erlang
+{ validator, ".*",	{ git, "git://github.com/wrren/validator.erl.git", { branch, "master" } } }
+```
+
 ## Specifications
 
 Specifications are passed as a list of atoms and/or key/value tuples to the validate function.
