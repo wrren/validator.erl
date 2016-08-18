@@ -27,8 +27,16 @@ boolean_test() ->
 string_test() ->
 	{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { length, 5 } ] ),
 	{ ok, <<"Hello">> }	= validator:validate( <<"Hello">>,	[ string, { length, 5 } ] ),
-	{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { whitelist, "olleH" } ] ),
-	{ error, _, _ }		= validator:validate( "Hello",		[ string, { whitelist, "ello" } ] ),
-	{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { blacklist, "zx!654" } ] ),
-	{ error, _, _ }		= validator:validate( "Hello",		[ string, { blacklist, "l" } ] ),
+	
+	{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { whitelist, ["olleH", alpha] } ] ),
+	{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { whitelist, [alphanumeric] } ] ),
+	{ ok, "12345" }		= validator:validate( "12345",		[ string, { whitelist, [alphanumeric] } ] ),
+	{ error, _, _ }		= validator:validate( "Hello",		[ string, { whitelist, ["ello"] } ] ),
+	{ error, _, _ }		= validator:validate( "Hello",		[ string, { whitelist, [numeric] } ] ),
+	
+	{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { blacklist, [numeric] } ] ),
+	{ error, _, _ }		= validator:validate( "Hello",		[ string, { blacklist, [alpha] } ] ),
+	{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { blacklist, ["zx!654"] } ] ),
+	{ error, _, _ }		= validator:validate( "Hello",		[ string, { blacklist, ["l"] } ] ),
+
 	{ error, 1, _ }		= validator:validate( 1,			[ string ] ).

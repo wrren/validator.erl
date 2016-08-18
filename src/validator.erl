@@ -21,8 +21,8 @@
 %%	numeric					- Value must be an integer or floating-point value
 %%	{ length, Len }			- String value must be Len characters long
 %%	{ length, Min, Max }	- String value must be between Min and Max characters long
-%% 	{ whitelist, [char] }	- String value can only contain characters in the given whitelist
-%%	{ blacklist, [char] }	- String value cannot contain characters in the given blacklist
+%% 	{ whitelist, [Spec] }	- String value can only contain characters in the given whitelist spec ( alpha, numeric, alphanumeric or a string of whitelisted characters )
+%%	{ blacklist, [Spec] }	- String value cannot contain characters in the given blacklist
 %%	{ bounded, Min, Max }	- Numeric value must be greater than or equal to Min and less than or equal to Max
 %%	{ min, Min }			- Numeric value must be greater than or equal to Min
 %%	{ max, Max }			- Numeric value must be less than or equal to Max
@@ -117,14 +117,14 @@ validate( Value, [ { length, _Len } | Rest ], Errors ) ->
 %%
 %%	Character black and white listing
 %%
-validate( Value, [{ whitelist, Chars } | Rest], Errors ) when is_list( Value ) ->
-	case lists:all( fun( C ) -> lists:member( C, Chars ) end, Value ) of
+validate( Value, [{ whitelist, Specs } | Rest], Errors ) when is_list( Value ) ->
+	case whitelist( Value, Specs ) of
 		true 	-> validate( Value, Rest, Errors );
 		false 	-> validate( Value, Rest, [ <<"Value contains non-whitelisted characters">> | Errors ] )
 	end;
 
-validate( Value, [{ blacklist, Chars } | Rest], Errors ) when is_list( Value ) ->
-	case lists:all( fun( C ) -> lists:member( C, Chars ) =:= false end, Value ) of
+validate( Value, [{ blacklist, Specs } | Rest], Errors ) when is_list( Value ) ->
+	case blacklist( Value, Specs ) of
 		true 	-> validate( Value, Rest, Errors );
 		false 	-> validate( Value, Rest, [ <<"Value contains non-whitelisted characters">> | Errors ] )
 	end;
@@ -176,3 +176,48 @@ validate( Value, [], [] ) ->
 
 validate( Value, [], Errors ) ->
 	{ error, Value, Errors }.
+
+%%
+%%	Given a list of whitelist specs, verify that the given string value conforms to all specs
+%%
+whitelist( Value, [ alpha | T ] ) ->
+	whitelist( lists:filter( fun( C ) -> ( C >= $A andalso C =< $z ) =:= false end, Value ), T );
+
+whitelist( Value, [ numeric | T ] ) ->
+	whitelist( lists:filter( fun( C ) -> ( C >= $0 andalso C =< $9 ) =:= false end, Value ), T );
+
+whitelist( Value, [ alphanumeric | T ] ) ->
+	whitelist( Value, [ alpha, numeric | T ] );
+
+whitelist( Value, [ Chars | T ] ) ->
+	whitelist( lists:filter( fun( C ) -> lists:member( C, Chars ) =:= false end, Value ), T );
+
+whitelist( [], [] ) ->
+	true;
+
+whitelist( _, [] ) ->
+	false.
+
+%%
+%%	Given a list of blacklist specs, verify that the given string value only contains characters outside the given specs
+%%
+blacklist( Value, Specs ) ->
+	blacklist( Value, Specs, false ).
+
+blacklist( _, _, true ) ->
+	false;
+
+blacklist( Value, [ alpha | T ], false ) ->
+	blacklist( Value, T, lists:any( fun( C ) -> ( C >= $a andalso C =< $z ) end, Value ) );
+
+blacklist( Value, [ numeric | T ], false ) ->
+	blacklist( Value, T, lists:any( fun( C ) -> ( C >= $0 andalso C =< $9 ) end, Value ) );
+
+blacklist( Value, [ alphanumeric | T ], false ) ->
+	blacklist( Value, [ alpha, numeric | T ], false );
+
+blacklist( Value, [ Chars | T ], false ) ->
+	blacklist( Value, T, lists:any( fun( C ) -> lists:member( C, Chars ) end, Value ) );
+
+blacklist( _, [], false ) ->
+	true.
