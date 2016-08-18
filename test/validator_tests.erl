@@ -27,4 +27,8 @@ boolean_test() ->
 string_test() ->
 	{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { length, 5 } ] ),
 	{ ok, <<"Hello">> }	= validator:validate( <<"Hello">>,	[ string, { length, 5 } ] ),
+	{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { whitelist, "olleH" } ] ),
+	{ error, _, _ }		= validator:validate( "Hello",		[ string, { whitelist, "ello" } ] ),
+	{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { blacklist, "zx!654" } ] ),
+	{ error, _, _ }		= validator:validate( "Hello",		[ string, { blacklist, "l" } ] ),
 	{ error, 1, _ }		= validator:validate( 1,			[ string ] ).

@@ -21,6 +21,8 @@
 %%	numeric					- Value must be an integer or floating-point value
 %%	{ length, Len }			- String value must be Len characters long
 %%	{ length, Min, Max }	- String value must be between Min and Max characters long
+%% 	{ whitelist, [char] }	- String value can only contain characters in the given whitelist
+%%	{ blacklist, [char] }	- String value cannot contain characters in the given blacklist
 %%	{ bounded, Min, Max }	- Numeric value must be greater than or equal to Min and less than or equal to Max
 %%	{ min, Min }			- Numeric value must be greater than or equal to Min
 %%	{ max, Max }			- Numeric value must be less than or equal to Max
@@ -111,6 +113,21 @@ validate( Value, [ { length, Len } | Rest ], Errors ) when length( Value ) == Le
 
 validate( Value, [ { length, _Len } | Rest ], Errors ) ->
 	validate( Value, Rest, [ <<"Value has incorrect length">> | Errors ] );
+
+%%
+%%	Character black and white listing
+%%
+validate( Value, [{ whitelist, Chars } | Rest], Errors ) when is_list( Value ) ->
+	case lists:all( fun( C ) -> lists:member( C, Chars ) end, Value ) of
+		true 	-> validate( Value, Rest, Errors );
+		false 	-> validate( Value, Rest, [ <<"Value contains non-whitelisted characters">> | Errors ] )
+	end;
+
+validate( Value, [{ blacklist, Chars } | Rest], Errors ) when is_list( Value ) ->
+	case lists:all( fun( C ) -> lists:member( C, Chars ) =:= false end, Value ) of
+		true 	-> validate( Value, Rest, Errors );
+		false 	-> validate( Value, Rest, [ <<"Value contains non-whitelisted characters">> | Errors ] )
+	end;
 
 %%
 %%	Check whether the value's length is greater than Min and less than or equal to Max
