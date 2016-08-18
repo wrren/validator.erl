@@ -21,8 +21,8 @@
 %%	numeric					- Value must be an integer or floating-point value
 %%	{ length, Len }			- String value must be Len characters long
 %%	{ length, Min, Max }	- String value must be between Min and Max characters long
-%% 	{ whitelist, [Spec] }	- String value can only contain characters in the given whitelist spec ( alpha, numeric, alphanumeric or a string of whitelisted characters )
-%%	{ blacklist, [Spec] }	- String value cannot contain characters in the given blacklist
+%% 	{ whitelist, [Spec] }	- String value can only contain characters in the given whitelist specs ( alpha, numeric, alphanumeric or a string of whitelisted characters )
+%%	{ blacklist, [Spec] }	- String value cannot contain characters in the given blacklist specs ( alpha, numeric, alphanumeric or a string of blacklisted characters )
 %%	{ bounded, Min, Max }	- Numeric value must be greater than or equal to Min and less than or equal to Max
 %%	{ min, Min }			- Numeric value must be greater than or equal to Min
 %%	{ max, Max }			- Numeric value must be less than or equal to Max
@@ -123,8 +123,20 @@ validate( Value, [{ whitelist, Specs } | Rest], Errors ) when is_list( Value ) -
 		false 	-> validate( Value, Rest, [ <<"Value contains non-whitelisted characters">> | Errors ] )
 	end;
 
+validate( Value, [{ whitelist, Specs } | Rest], Errors ) when is_binary( Value ) ->
+	case whitelist( binary_to_list( Value ), Specs ) of
+		true 	-> validate( Value, Rest, Errors );
+		false 	-> validate( Value, Rest, [ <<"Value contains non-whitelisted characters">> | Errors ] )
+	end;
+
 validate( Value, [{ blacklist, Specs } | Rest], Errors ) when is_list( Value ) ->
 	case blacklist( Value, Specs ) of
+		true 	-> validate( Value, Rest, Errors );
+		false 	-> validate( Value, Rest, [ <<"Value contains non-whitelisted characters">> | Errors ] )
+	end;
+
+validate( Value, [{ blacklist, Specs } | Rest], Errors ) when is_binary( Value ) ->
+	case blacklist( binary_to_list( Value ), Specs ) of
 		true 	-> validate( Value, Rest, Errors );
 		false 	-> validate( Value, Rest, [ <<"Value contains non-whitelisted characters">> | Errors ] )
 	end;

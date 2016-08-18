@@ -23,6 +23,8 @@ integer					%% Value must be an integer
 numeric					%% Value must be an integer or floating-point value
 { length, Len }			%% String value must be Len characters long
 { length, Min, Max }	%% String value must be between Min and Max characters long
+{ whitelist, [Spec] }	- String value can only contain characters in the given whitelist specs ( alpha, numeric, alphanumeric or a string of whitelisted characters )
+{ blacklist, [Spec] }	- String value cannot contain characters in the given blacklist specs ( alpha, numeric, alphanumeric or a string of blacklisted characters )
 { bounded, Min, Max }	%% Numeric value must be greater than or equal to Min and less than or equal to Max
 { min, Min }			%% Numeric value must be greater than or equal to Min
 { max, Max }			%% Numeric value must be less than or equal to Max
@@ -61,5 +63,19 @@ numeric					%% Value must be an integer or floating-point value
 { ok, "Hello" }		= validator:validate( "Hello",		[ string, { length, 5 } ] ),
 { ok, <<"Hello">> }	= validator:validate( <<"Hello">>,	[ string, { length, 5 } ] ),
 { error, 1, _ }		= validator:validate( 1,			[ string ] ).
+
+%% String content whitelisting
+{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { whitelist, ["olleH", alpha] } ] ),
+{ ok, <<"Hello">> }	= validator:validate( <<"Hello">>,	[ string, { whitelist, ["olleH", alpha] } ] ),
+{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { whitelist, [alphanumeric] } ] ),
+{ ok, "12345" }		= validator:validate( "12345",		[ string, { whitelist, [alphanumeric] } ] ),
+{ error, _, _ }		= validator:validate( "Hello",		[ string, { whitelist, ["ello"] } ] ),
+{ error, _, _ }		= validator:validate( "Hello",		[ string, { whitelist, [numeric] } ] ),
+
+%% String content blacklisting
+{ ok, <<"Hello">> }	= validator:validate( <<"Hello">>,	[ string, { blacklist, [numeric] } ] ),
+{ error, _, _ }		= validator:validate( "Hello",		[ string, { blacklist, [alpha] } ] ),
+{ ok, "Hello" }		= validator:validate( "Hello",		[ string, { blacklist, ["zx!654"] } ] ),
+{ error, _, _ }		= validator:validate( "Hello",		[ string, { blacklist, ["l"] } ] )
 
 ```
